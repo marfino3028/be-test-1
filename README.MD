@@ -1,190 +1,432 @@
-# Node Wave Base Repositories for Backend
+# NodeWave Backend Assessment - File Processing API
 
+Hey there! Welcome to my submission for the NodeWave Backend Assessment. This project demonstrates a backend system that can handle large Excel file uploads without blocking the user experience. 
 
-## Tech Stacks 
+## What's This All About?
 
-- Language : TypeScript 
-- ORM : Prisma 
-- Database : MySQL
-- HTTP Framework : Express 
-- Logging : Winston + Morgan
+Imagine you're dealing with a massive Excel file with thousands of products. The old way would make users wait forever while the server crunches through all that data. Not cool, right?
 
-> [!NOTE]  
->  As stated in Getting Started parts of our notion, don't forget to make sure that you have Node.js >= 16.14.2 and MySQL >= 8.0.3
+This system takes a different approach: upload the file, get an instant confirmation, and let the processing happen in the background. Users can check back anytime to see the progress or grab their data once it's ready.
 
-## How to use
+## Key Features Built
 
-Clone this repository, and set up various things like :
+### The Must-Haves ✓
+- **Secure Authentication** - JWT-based login system so only authorized users can access their data
+- **Excel File Processing** - Handles both `.xlsx` and `.csv` files gracefully
+- **Background Job Processing** - Files process asynchronously, no more hanging requests
+- **Smart Filtering & Pagination** - Query your data exactly how you need it (using FilterQueryV2)
+- **Real-time Progress Tracking** - Know exactly how many rows have been processed
+- **Retry Mechanism** - Failed? No problem, retry with one click
 
-- change package.json structure
-- change auth mechanism to match project
-- update readme (delete this how to use part and change the title!)
+### Bonus Goodies 🎁
+- **Todo Management** - A full CRUD demo showing filtering in action
+- **Multi-format Support** - Works with Excel (both `.xls` and `.xlsx`) and CSV
+- **URL-based Processing** - Don't even need to upload, just send a file URL
+- **Batch Processing** - Handles huge files by processing in chunks of 100 rows
 
-> [!IMPORTANT]  
->  Steps below are steps to run on project, this repo is only a base, not a fully runnable project, this repo only serve as a template! If you wish to try this repo and add more functionality, please create your own branch locally :)
+## How It Works
 
-## Steps To Run Project Locally
+Here's the flow when someone uploads a file:
 
 ```
-git checkout develop
+User Uploads File
+    ↓
+API creates a tracking entry (status: IN_PROGRESS)
+    ↓
+Returns success immediately ← User can continue using the app
+    ↓
+Background job kicks in
+    ↓
+Processes Excel file row by row (100 rows at a time)
+    ↓
+Updates progress in real-time
+    ↓
+Status changes to COMPLETED (or FAILED if something went wrong)
 ```
-Install dependencies with :
 
-```powershell
+The beauty? The user never waits around. They get instant feedback and can check back whenever.
+
+## Getting Started
+
+### What You'll Need
+- Node.js v16 or newer
+- MySQL database
+- npm (comes with Node.js)
+
+### Setup Steps
+
+**1. Clone and Install**
+```bash
+git clone <your-repo-url>
+cd be-test
 npm install
 ```
 
-Get .env value, and change db connection url in .env
+**2. Configure Your Environment**
 
-Run prisma db migration with :
-
-```powershell
-npx prisma migrate --name <migration_name>
-```
-Run seeder for admin user :
-
-  > [!IMPORTANT]  
-  > Delete this part on your repository in case there is no seeder available on your codebase.
-
-```powershell
-npm run seed
+Copy the example environment file:
+```bash
+cp example.env .env
 ```
 
-## Running The App 
-
-This base app was meant to have several different implementation, for now we just have a REST API Server, but if we happen to 
-have more like grpc, cron, or maybe pub-sub consumer, we can register it too the 
-`/app` and `/server` folder 
-
-and register the command into the `/src/index.ts` as the argument of choice 
-
-By Default, to run the app with hot-reload simply run 
-```
-npm run dev -- --service=rest
+Then edit `.env` with your details:
+```env
+DATABASE_URL="mysql://username:password@localhost:3306/nodewave_test"
+JWT_SECRET="your-super-secret-jwt-key"
+JWT_EXPIRES_IN="7d"
+NODE_LOCAL_PORT=3150
+ENVIRONMENT=dev
 ```
 
-If you want to start the build version, run it with : 
-```
-npm start -- --service=rest
-```
+**3. Setup the Database**
 
-## Creating new features / endpoint
-
-- Branch out from develop
-```
-git checkout -b <branch_name>
-```
-- Create a new schema (if needed) on prisma/schema.prisma
-
-- Migrate the schema with :
-```
-npx prisma migrate --name <migration_name>
+Run migrations to create all necessary tables:
+```bash
+npx prisma migrate dev --name init
+npx prisma generate
 ```
 
-- Create new entity on `/entities` folder
+**4. Fire It Up**
+```bash
+npm run dev
+```
 
-- Create validation for that entities (for create and update if any) on `/validations` folder
+Your API should now be running at `http://localhost:3150`. You're all set!
 
-- Create the service layer on /services
+## API Guide
 
-- Link it into controller in /controllers
+I've included a Postman collection with examples, but here's a quick rundown:
 
-- Create new routes file instance at /routes, for example `ProductRoutes.ts`
+### Authentication
 
-- Register the routes into registry (`routes/registry.ts`)
+**Sign Up**
+```bash
+POST /auth/register
 
-- use the routes, with router.use(), for example :
+{
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "john@example.com",
+  "password": "password123",
+  "phoneNumber": "+62812345678",
+  "country": "Indonesia",
+  "bio": "Backend Engineer"
+}
+```
 
-  ```js
-  router.use("/products", RoutesRegistry.productRoutes);
-  ```
+**Login**
+```bash
+POST /auth/login
 
-- Test in postman and document it with example
+{
+  "email": "john@example.com",
+  "password": "password123"
+}
+```
 
+You'll get back a JWT token - use it in the `Authorization: Bearer <token>` header for protected routes.
 
-## Folder Structures Brief Explanation 
+### File Processing - The Main Event
 
-#### Apps and Servers 
+**Upload a File**
+```bash
+POST /file-process/upload
+Authorization: Bearer <your-token>
+Content-Type: multipart/form-data
 
-- `/app` 
+file: <your-excel-file>
+```
 
-  This contains app inilization for different communication protocol, files inside this directory is responsible to starting up the communcation protocol based server
+Response looks like:
+```json
+{
+  "success": true,
+  "message": "File uploaded successfully. Processing started in background.",
+  "data": {
+    "id": "some-uuid",
+    "fileName": "products.xlsx",
+    "status": "IN_PROGRESS",
+    "totalRows": 0,
+    "processedRows": 0,
+    "startedAt": "2024-01-01T00:00:00Z"
+  }
+}
+```
 
-  Default app is rest, if you want to add more , you can add it by naming it something like `<protocol>.ts` , e.g. : `grpc.ts` , add it to instance.ts 
+Notice how you get an immediate response? That's the non-blocking magic at work.
 
-- `/server` 
-  
-  This contains server initialization for different communication 
-  protocol server, file inside this directory will responsible to hold the configuration needed, like the the server initialization, dependencies for this communcation protocol etc. 
+**Check Progress**
+```bash
+GET /file-process/:id
+Authorization: Bearer <your-token>
+```
 
-  if you want to add more , you can add it by naming it something like `<protocol>.ts` , e.g. : `grpc.ts` , add it to the instance.ts 
+This shows you real-time progress. Keep polling this until status becomes `COMPLETED`.
 
-> [!IMPORTANT]  
-> After you add both app and server, configure it to be receivable my the command line argument, by adding the app function and argument into the if condition inside `src/index.ts`
+**Get All Your Uploads**
+```bash
+GET /file-process?filters={"status":"COMPLETED"}&page=1&rows=10
+Authorization: Bearer <your-token>
+```
 
-#### Entities 
+**Process from URL (Alternative)**
 
-- `/entity` 
+Don't want to upload? Just send a file URL:
+```bash
+POST /file-process/process-url
+Authorization: Bearer <your-token>
 
-  Files inside this directory, will hold various `interfaces` or `types`, needed for data transfer and access (DTOs and DAOs), in this directory, we follow the Domain-Driven pattern, where it will easily transalates to each domain means each table on db. 
+{
+  "fileUrl": "https://example.com/products.xlsx",
+  "fileName": "products.xlsx"
+}
+```
 
-  Or maybe in other case, you can also specify global types that is used everywhere in the code, like `Service.ts` that we currently have and `Query.ts` entities, this means to hold all types related to service responses and dynamic query arguments and also pagination result.
+**Retry Failed Jobs**
 
+If something went wrong:
+```bash
+POST /file-process/:id/retry
+Authorization: Bearer <your-token>
+```
 
-#### Packages and Utils
+**View Processed Products**
+```bash
+GET /file-process/:id/products?page=1&rows=20
+Authorization: Bearer <your-token>
+```
 
-- `/pkg` 
+### Filtering & Search - The Cool Stuff
 
-  This dir is simple, you categorize 3rd party integration inside of this dir, you can also define types spesific to this 3rd party inside here, so the common practice is something like : 
-  ```
-    - pkg 
-        - package name 
-            - index.ts -> package instance (use singleton if possible please)
-            - interfaces.ts -> for package spesific typing 
-            - utils.ts  -> for utility functions
-            - ... methodspecific.ts -> for specific sub-functionality, e.g: coreAPI.ts in midtrans pkg only holds functions needed to do payment through midtrans's Core API
-  ```
+This is where FilterQueryV2 shines. You can combine multiple filters:
 
-  We make it in this structure so it will be clear that all of this belongs to specific 3rd party.
+**Exact Match Filter**
+```
+GET /file-process/:id/products?filters={"category":"Electronics"}
+```
 
-- `/utils` 
+**Search (Partial Match)**
+```
+GET /file-process/:id/products?searchFilters={"name":"phone"}
+```
 
-  This dir will holds utility function that are needed for helpers globally, like string manipulation, dates manipulation etc 
+**Price Range**
+```
+GET /file-process/:id/products?rangedFilters=[{"key":"price","start":100,"end":500}]
+```
 
- 
-#### Controllers and Services 
+**Combine Everything**
+```
+GET /file-process/:id/products?filters={"category":"Electronics"}&searchFilters={"name":"laptop"}&rangedFilters=[{"key":"price","start":500,"end":1500}]&page=1&rows=20&orderKey=price&orderRule=asc
+```
 
- - `/controllers` 
-  Here, we also follow domain based filenaming, so each domain will have 1 controller, with the responsibility in controller, only limited to 
-    - Retrieve and parse the request.
-    - Call service function 
-    - Return the response.
+Want electronics, with "laptop" in the name, priced between $500-$1500, sorted by price ascending, 20 items per page? Done.
 
+### Todo Endpoints (Bonus Feature)
 
- - `/services`
+I built a complete todo system to showcase the filtering capabilities:
 
-  Here, we also follow domain based file naming, each domain will have 1 services, and maybe 1 helper service if needed, with the responsibility in service is only to do business logics, calling the db (we don't use repository since prisma orm is already more or less like a repository in it's nature). Please never mix up 3rd party integration here, as we already have the package for that, unless the 3rd party will also have controllers (like midtrans callback).
+**Create Todo**
+```bash
+POST /todos
+Authorization: Bearer <your-token>
 
+{
+  "task": "Complete NodeWave assessment"
+}
+```
 
-#### Routes, Validations and Middlewares
+**Get All Todos with Filters**
+```bash
+GET /todos?filters={"status":"PENDING"}&searchFilters={"task":"assessment"}&page=1&rows=10
+```
 
-- `/routes` 
+**Update Todo Status**
+```bash
+PATCH /todos/:id
 
-  This folders mainly has 3 parts 
-  1. Domain based files ( e.g. : `ProductRoutes.ts` ), will contains all of the routings by domain 
-  2. `RoutesRegistry.ts`, we pool all the routes exports here 
-  3. index.ts -> we attach all the routes, pooled from `RoutesRegistry.ts` here
+{
+  "status": "SUCCESS"
+}
+```
 
-- `/validations` 
+**Bulk Delete**
+```bash
+POST /todos/delete-multiple
 
-  Domain based, serve as a middleware, contains validation for any operation that involves sending request body, normally you will create the validation here,
-  and use it on routes as a `middleware`.
- 
-  > [!WARNING]  
-  > Don't use validation function inside controllers because it will cause an error if you do so.
+{
+  "ids": ["uuid1", "uuid2", "uuid3"]
+}
+```
 
+## Excel File Format
 
-- `/middlewares` 
+Your Excel files should have these columns:
 
-  Here contains middlewares that can be used in the `/server/` directory or that can be used globally inside many routes, for example we have 
-  `authMiddleware` for JWT authentication, `morganMiddleware` for http logging.
+| Column | Required? | Type | Default |
+|--------|-----------|------|---------|
+| name | ✓ | String | - |
+| category | ✓ | String | - |
+| price | ✓ | Number | - |
+| stock | | Number | 0 |
+| description | | String | - |
+
+Example data:
+```
+name              | category    | price  | stock | description
+iPhone 14 Pro     | Electronics | 999.99 | 50    | Latest iPhone model
+MacBook Pro M2    | Electronics | 1999   | 25    | M2 chip laptop
+Herman Miller     | Furniture   | 1395   | 20    | Ergonomic office chair
+```
+
+Check `SAMPLE_DATA.md` for more examples you can use for testing.
+
+## Project Structure
+
+Here's how everything is organized:
+
+```
+be-test/
+├── src/
+│   ├── controllers/          # Request handlers
+│   │   └── rest/
+│   │       ├── AuthController.ts
+│   │       ├── TodoController.ts
+│   │       └── FileProcessController.ts
+│   ├── services/             # Business logic layer
+│   │   ├── AuthService.ts
+│   │   ├── FileProcessService.ts
+│   │   └── helpers/
+│   │       └── FilterQueryV2.ts    # The filtering magic
+│   ├── middlewares/          # Auth & logging
+│   ├── routes/               # Route definitions
+│   ├── utils/                # Helper functions
+│   └── validations/          # Input validation
+├── prisma/
+│   ├── schema.prisma         # Database models
+│   └── seeds/                # Test data
+├── uploads/                  # Where uploaded files live
+└── NodeWave-Assessment.postman_collection.json
+```
+
+## Testing
+
+Run the test suite:
+```bash
+npm test
+```
+
+Or test manually with the Postman collection I've included. It has example requests for every endpoint.
+
+### Quick Manual Test with curl
+
+**Register a user:**
+```bash
+curl -X POST http://localhost:3150/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"firstName":"Test","lastName":"User","email":"test@example.com","password":"password123"}'
+```
+
+**Login:**
+```bash
+curl -X POST http://localhost:3150/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"password123"}'
+```
+
+**Upload file:**
+```bash
+curl -X POST http://localhost:3150/file-process/upload \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -F "file=@/path/to/your/file.xlsx"
+```
+
+## Security Features
+
+I didn't skip on security:
+- Passwords hashed with bcryptjs (salt rounds configured)
+- JWT tokens for stateless authentication
+- User-specific data isolation (you can only see your own uploads)
+- Input validation on all endpoints
+- SQL injection protection via Prisma ORM
+- File type validation (only Excel/CSV allowed)
+- File size limits (10MB max)
+
+## Performance Optimizations
+
+Some design choices I made for performance:
+
+1. **Batch Processing** - Large files processed in 100-row chunks to avoid memory issues
+2. **Non-blocking I/O** - Background jobs don't block the main thread
+3. **Database Indexing** - Key columns indexed for faster queries
+4. **Connection Pooling** - Prisma manages DB connections efficiently
+5. **Pagination** - Never return massive datasets, always paginate
+
+## Design Patterns Used
+
+I kept things clean and maintainable:
+
+- **Service Layer Pattern** - Business logic separated from controllers
+- **Repository Pattern** - Data access abstracted through Prisma
+- **Middleware Pattern** - Auth and logging as reusable middleware
+- **Background Job Pattern** - File processing doesn't block requests
+- **Factory Pattern** - Services instantiated through dependency injection
+
+## Error Handling
+
+All errors return a consistent format:
+
+```json
+{
+  "success": false,
+  "message": "Something went wrong",
+  "data": null
+}
+```
+
+HTTP status codes follow standard conventions:
+- `200` - Everything's good
+- `201` - Resource created
+- `400` - Bad request (check your input)
+- `401` - Not authenticated
+- `404` - Resource not found
+- `409` - Conflict (duplicate entry)
+- `500` - Server error (check logs)
+
+## Assessment Requirements ✓
+
+Let me map this to the original requirements:
+
+- [x] **JWT Authentication** - Full register/login system
+- [x] **Excel Processing** - Handles XLSX, XLS, and CSV
+- [x] **Background Processing** - Non-blocking with progress tracking
+- [x] **Filtering & Pagination** - FilterQueryV2 with dynamic queries
+- [x] **Status Tracking** - Real-time progress updates
+- [x] **Retry Mechanism** - One-click retry for failed jobs
+- [x] **Code Quality** - Clean, documented, TypeScript
+- [x] **Documentation** - Comprehensive README + Postman collection
+
+## What I Learned
+
+This project was a great exercise in:
+- Designing non-blocking APIs
+- Handling large file processing efficiently
+- Building flexible filtering systems
+- Structuring TypeScript backends cleanly
+- Writing documentation that others can actually use
+
+## Final Thoughts
+
+I focused on building something that actually works in production. No shortcuts, proper error handling, clean code structure, and comprehensive documentation.
+
+The filtering system is particularly powerful - users can query their data in pretty much any way they need. The background processing ensures a smooth user experience even with massive files.
+
+Thanks for the opportunity to work on this. I'm excited to discuss the technical decisions I made!
+
+---
+
+**Questions?** Feel free to reach out. All my contact info should be in the assessment invitation.
+
+**Repository:** Private (invited collaborators: rizqyep, Mkput, nodewavescout)
+
+**Postman Collection:** `NodeWave-Assessment.postman_collection.json` in the root directory

@@ -1,0 +1,724 @@
+{
+  "info": {
+    "name": "NodeWave Backend Assessment API",
+    "description": "Complete API documentation for NodeWave backend assessment including authentication, todos, and file processing with background jobs.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3150",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "file_process_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "todo_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('token', response.data.token);",
+                  "    pm.collectionVariables.set('user_id', response.data.user.id);",
+                  "    pm.environment.set('token', response.data.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Ahmad\",\n  \"lastName\": \"Akbar\",\n  \"email\": \"ahmad.akbar@example.com\",\n  \"password\": \"password123\",\n  \"phoneNumber\": \"+6281234567890\",\n  \"country\": \"Indonesia\",\n  \"bio\": \"Backend Developer\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Register a new user account. Returns user data and JWT token."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "Created",
+              "code": 201,
+              "header": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"User registered successfully\",\n  \"data\": {\n    \"user\": {\n      \"id\": \"uuid\",\n      \"firstName\": \"Ahmad\",\n      \"lastName\": \"Akbar\",\n      \"email\": \"ahmad.akbar@example.com\",\n      \"phoneNumber\": \"+6281234567890\",\n      \"country\": \"Indonesia\",\n      \"bio\": \"Backend Developer\",\n      \"createdAt\": \"2024-01-01T00:00:00.000Z\",\n      \"updatedAt\": \"2024-01-01T00:00:00.000Z\"\n    },\n    \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('token', response.data.token);",
+                  "    pm.collectionVariables.set('user_id', response.data.user.id);",
+                  "    pm.environment.set('token', response.data.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"ahmad.akbar@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Login with email and password. Returns user data and JWT token."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "header": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Login successful\",\n  \"data\": {\n    \"user\": {\n      \"id\": \"uuid\",\n      \"firstName\": \"Ahmad\",\n      \"lastName\": \"Akbar\",\n      \"email\": \"ahmad.akbar@example.com\"\n    },\n    \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/profile",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "profile"]
+            },
+            "description": "Get current authenticated user profile. Requires Bearer token."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Todos",
+      "item": [
+        {
+          "name": "Create Todo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('todo_id', response.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"task\": \"Complete NodeWave Backend Assessment\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/todos",
+              "host": ["{{base_url}}"],
+              "path": ["todos"]
+            },
+            "description": "Create a new todo task."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Todos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/todos?page=1&rows=10&orderKey=createdAt&orderRule=desc",
+              "host": ["{{base_url}}"],
+              "path": ["todos"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "rows",
+                  "value": "10"
+                },
+                {
+                  "key": "orderKey",
+                  "value": "createdAt"
+                },
+                {
+                  "key": "orderRule",
+                  "value": "desc"
+                }
+              ]
+            },
+            "description": "Get all todos with pagination and sorting."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Todos with Filter",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/todos?filters={\"status\":\"PENDING\"}&page=1&rows=10",
+              "host": ["{{base_url}}"],
+              "path": ["todos"],
+              "query": [
+                {
+                  "key": "filters",
+                  "value": "{\"status\":\"PENDING\"}"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "rows",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Get todos filtered by status."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Todos with Search",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/todos?searchFilters={\"task\":\"assessment\"}",
+              "host": ["{{base_url}}"],
+              "path": ["todos"],
+              "query": [
+                {
+                  "key": "searchFilters",
+                  "value": "{\"task\":\"assessment\"}"
+                }
+              ]
+            },
+            "description": "Search todos by partial match on task field."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Todo by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/todos/{{todo_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["todos", "{{todo_id}}"]
+            },
+            "description": "Get single todo by ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Todo",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"SUCCESS\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/todos/{{todo_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["todos", "{{todo_id}}"]
+            },
+            "description": "Update todo status or task."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Todo",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/todos/{{todo_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["todos", "{{todo_id}}"]
+            },
+            "description": "Delete a single todo."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Multiple Todos",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ids\": [\"uuid1\", \"uuid2\", \"uuid3\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/todos/delete-multiple",
+              "host": ["{{base_url}}"],
+              "path": ["todos", "delete-multiple"]
+            },
+            "description": "Delete multiple todos at once."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "File Processing",
+      "item": [
+        {
+          "name": "Upload Excel File",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('file_process_id', response.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "/path/to/your/file.xlsx"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/file-process/upload",
+              "host": ["{{base_url}}"],
+              "path": ["file-process", "upload"]
+            },
+            "description": "Upload an Excel file for processing. Processing happens in background."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "header": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"File uploaded successfully. Processing started in background.\",\n  \"data\": {\n    \"id\": \"uuid\",\n    \"userId\": \"user-uuid\",\n    \"fileName\": \"products.xlsx\",\n    \"fileUrl\": \"http://localhost:3150/uploads/filename.xlsx\",\n    \"status\": \"IN_PROGRESS\",\n    \"totalRows\": 0,\n    \"processedRows\": 0,\n    \"errorMessage\": null,\n    \"startedAt\": \"2024-01-01T00:00:00.000Z\",\n    \"completedAt\": null,\n    \"createdAt\": \"2024-01-01T00:00:00.000Z\",\n    \"updatedAt\": \"2024-01-01T00:00:00.000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Process File from URL",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('file_process_id', response.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fileUrl\": \"https://example.com/sample-products.xlsx\",\n  \"fileName\": \"sample-products.xlsx\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/file-process/process-url",
+              "host": ["{{base_url}}"],
+              "path": ["file-process", "process-url"]
+            },
+            "description": "Process Excel file from external URL. Recommended approach to save time."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All File Processes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/file-process?page=1&rows=10&orderKey=createdAt&orderRule=desc",
+              "host": ["{{base_url}}"],
+              "path": ["file-process"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "rows",
+                  "value": "10"
+                },
+                {
+                  "key": "orderKey",
+                  "value": "createdAt"
+                },
+                {
+                  "key": "orderRule",
+                  "value": "desc"
+                }
+              ]
+            },
+            "description": "Get all file processes with pagination."
+          },
+          "response": []
+        },
+        {
+          "name": "Get File Processes with Status Filter",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/file-process?filters={\"status\":\"COMPLETED\"}&page=1&rows=10",
+              "host": ["{{base_url}}"],
+              "path": ["file-process"],
+              "query": [
+                {
+                  "key": "filters",
+                  "value": "{\"status\":\"COMPLETED\"}"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "rows",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Filter file processes by status: IN_PROGRESS, COMPLETED, or FAILED."
+          },
+          "response": []
+        },
+        {
+          "name": "Get File Process by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/file-process/{{file_process_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["file-process", "{{file_process_id}}"]
+            },
+            "description": "Get detailed information about a file process including progress and status."
+          },
+          "response": [
+            {
+              "name": "Success - In Progress",
+              "status": "OK",
+              "code": 200,
+              "header": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"File process retrieved successfully\",\n  \"data\": {\n    \"id\": \"uuid\",\n    \"status\": \"IN_PROGRESS\",\n    \"totalRows\": 1000,\n    \"processedRows\": 450,\n    \"_count\": {\n      \"products\": 450\n    }\n  }\n}"
+            },
+            {
+              "name": "Success - Completed",
+              "status": "OK",
+              "code": 200,
+              "header": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"File process retrieved successfully\",\n  \"data\": {\n    \"id\": \"uuid\",\n    \"status\": \"COMPLETED\",\n    \"totalRows\": 1000,\n    \"processedRows\": 1000,\n    \"completedAt\": \"2024-01-01T00:05:00.000Z\",\n    \"_count\": {\n      \"products\": 1000\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Retry Failed Processing",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/file-process/{{file_process_id}}/retry",
+              "host": ["{{base_url}}"],
+              "path": ["file-process", "{{file_process_id}}", "retry"]
+            },
+            "description": "Retry a failed file processing job. Only works for FAILED status."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Products from File Process",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/file-process/{{file_process_id}}/products?page=1&rows=20",
+              "host": ["{{base_url}}"],
+              "path": ["file-process", "{{file_process_id}}", "products"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "rows",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Get all products parsed from the Excel file."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Products with Filter",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/file-process/{{file_process_id}}/products?filters={\"category\":\"Electronics\"}&page=1&rows=20",
+              "host": ["{{base_url}}"],
+              "path": ["file-process", "{{file_process_id}}", "products"],
+              "query": [
+                {
+                  "key": "filters",
+                  "value": "{\"category\":\"Electronics\"}"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "rows",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Get products filtered by category."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Products with Search and Price Range",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/file-process/{{file_process_id}}/products?searchFilters={\"name\":\"phone\"}&rangedFilters=[{\"key\":\"price\",\"start\":500,\"end\":1000}]&page=1&rows=20",
+              "host": ["{{base_url}}"],
+              "path": ["file-process", "{{file_process_id}}", "products"],
+              "query": [
+                {
+                  "key": "searchFilters",
+                  "value": "{\"name\":\"phone\"}"
+                },
+                {
+                  "key": "rangedFilters",
+                  "value": "[{\"key\":\"price\",\"start\":500,\"end\":1000}]"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "rows",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Search products with name containing 'phone' and price between 500-1000."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

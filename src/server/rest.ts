@@ -2,6 +2,7 @@ import express from "express";
 import routes from "$routes/index";
 import cors from "cors";
 import morganMiddleware from "$middlewares/morganMiddleware";
+import path from "path";
 
 export default function createRestServer() {
   let allowedOrigins:string[] = ["*"]
@@ -15,6 +16,10 @@ export default function createRestServer() {
   app.use(cors(corsOptions));
   app.use(morganMiddleware);
   app.use(express.json());
+  
+  // Serve static files (uploaded files)
+  app.use('/uploads', express.static(path.join(__dirname, '../../uploads')));
+  
   app.use(routes);
 
   return app;
