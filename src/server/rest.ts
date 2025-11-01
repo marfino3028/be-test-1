@@ -17,7 +17,7 @@ export default function createRestServer() {
   app.use(morganMiddleware);
   app.use(express.json());
   
-  // Serve static files (uploaded files)
+  
   app.use('/uploads', express.static(path.join(__dirname, '../../uploads')));
   
   app.use(routes);

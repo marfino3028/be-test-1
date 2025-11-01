@@ -10,7 +10,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// User model for authentication
 model User {
   id        String   @id @default(uuid())
   firstName String
@@ -29,7 +28,6 @@ model User {
   @@map("users")
 }
 
-// Todo model for task management
 model Todo {
   id        String   @id @default(uuid())
   userId    String
@@ -45,7 +43,7 @@ model Todo {
   @@map("todos")
 }
 
-// File processing model
+
 model FileProcess {
   id          String   @id @default(uuid())
   userId      String
@@ -68,7 +66,7 @@ model FileProcess {
   @@map("file_processes")
 }
 
-// Product model (parsed from Excel)
+
 model Product {
   id            String   @id @default(uuid())
   fileProcessId String

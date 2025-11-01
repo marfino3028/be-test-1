@@ -35,7 +35,7 @@ export default class FileProcessService extends Service {
    * Creates a file process entry and starts background processing
    */
   async initiateProcessing(data: ProcessFileDTO): Promise<FileProcess> {
-    // Create file process record with IN_PROGRESS status
+    
     const fileProcess = await this.prisma.fileProcess.create({
       data: {
         userId: data.userId,
@@ -45,7 +45,7 @@ export default class FileProcessService extends Service {
       },
     });
 
-    // Start background processing (non-blocking)
+    
     this.processFileInBackground(fileProcess.id, data.fileUrl).catch((error) => {
       console.error(`Background processing failed for file ${fileProcess.id}:`, error);
     });
@@ -62,13 +62,13 @@ export default class FileProcessService extends Service {
     fileUrl: string
   ): Promise<void> {
     try {
-      // Download file from URL
+      
       const response = await axios.get(fileUrl, {
         responseType: 'arraybuffer',
-        timeout: 30000, // 30 seconds timeout
+        timeout: 30000, 
       });
 
-      // Parse Excel file
+      
       const workbook = XLSX.read(response.data, { type: 'buffer' });
       const sheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
@@ -76,20 +76,20 @@ export default class FileProcessService extends Service {
 
       const totalRows = rows.length;
 
-      // Update total rows
+      
       await this.prisma.fileProcess.update({
         where: { id: fileProcessId },
         data: { totalRows },
       });
 
-      // Process rows in batches
+      
       const batchSize = 100;
       let processedRows = 0;
 
       for (let i = 0; i < rows.length; i += batchSize) {
         const batch = rows.slice(i, i + batchSize);
         
-        // Prepare products data
+        
         const products = batch
           .filter((row) => row.name && row.category && row.price)
           .map((row) => ({
@@ -101,7 +101,7 @@ export default class FileProcessService extends Service {
             description: row.description ? String(row.description).trim() : null,
           }));
 
-        // Bulk insert products
+        
         if (products.length > 0) {
           await this.prisma.product.createMany({
             data: products,
@@ -111,17 +111,17 @@ export default class FileProcessService extends Service {
 
         processedRows += batch.length;
 
-        // Update progress
+        
         await this.prisma.fileProcess.update({
           where: { id: fileProcessId },
           data: { processedRows },
         });
 
-        // Small delay to prevent overwhelming the database
+        
         await new Promise((resolve) => setTimeout(resolve, 100));
       }
 
-      // Mark as completed
+      
       await this.prisma.fileProcess.update({
         where: { id: fileProcessId },
         data: {
@@ -131,7 +131,7 @@ export default class FileProcessService extends Service {
         },
       });
     } catch (error: any) {
-      // Mark as failed with error message
+      
       await this.prisma.fileProcess.update({
         where: { id: fileProcessId },
         data: {
@@ -188,7 +188,7 @@ export default class FileProcessService extends Service {
       throw new Error('Only failed processes can be retried');
     }
 
-    // Reset status and counters
+    
     const updated = await this.prisma.fileProcess.update({
       where: { id },
       data: {
@@ -200,12 +200,12 @@ export default class FileProcessService extends Service {
       },
     });
 
-    // Delete old products
+    
     await this.prisma.product.deleteMany({
       where: { fileProcessId: id },
     });
 
-    // Start background processing again
+    
     this.processFileInBackground(id, fileProcess.fileUrl).catch((error) => {
       console.error(`Retry processing failed for file ${id}:`, error);
     });
@@ -217,7 +217,7 @@ export default class FileProcessService extends Service {
    * Get products from a file process
    */
   async getProducts(fileProcessId: string, userId: string, queryParams: any) {
-    // Verify file process belongs to user
+    
     const fileProcess = await this.prisma.fileProcess.findFirst({
       where: { id: fileProcessId, userId },
     });

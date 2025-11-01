@@ -20,14 +20,14 @@ router.get("/ping", (req: Request, res: Response) => {
 });
 
 
-// Authentication routes (no auth required)
+
 router.use("/auth", RoutesRegistry.AuthRoutes);
 
-// Protected routes
+
 router.use("/todos", RoutesRegistry.TodoRoutes);
 router.use("/file-process", RoutesRegistry.FileProcessRoutes);
 
-// Example routes
+
 router.use("/example", RoutesRegistry.ExampleRoutes);
 
 

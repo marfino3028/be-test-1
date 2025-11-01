@@ -104,7 +104,6 @@ export default class TodoController {
       const { id } = req.params;
       const { task, status } = req.body;
 
-      // Validate status if provided
       if (status && !Object.values(TodoStatus).includes(status)) {
         res.status(400).json(
           errorResponse('Invalid status. Must be PENDING or SUCCESS')

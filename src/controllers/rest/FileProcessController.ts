@@ -8,7 +8,7 @@ import fs from 'fs';
 
 const fileProcessService = new FileProcessService(prisma);
 
-// Configure multer for file upload
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const uploadDir = path.join(__dirname, '../../../uploads');
@@ -25,7 +25,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  limits: { fileSize: 10 * 1024 * 1024 }, 
   fileFilter: (req, file, cb) => {
     const allowedTypes = [
       'application/vnd.ms-excel',
@@ -68,8 +68,8 @@ export default class FileProcessController {
         return;
       }
 
-      // In production, you would upload to cloud storage (S3, GCS, etc.)
-      // For this example, we'll use a local file URL
+      
+      
       const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
 
       const fileProcess = await fileProcessService.initiateProcessing({
@@ -107,7 +107,7 @@ export default class FileProcessController {
         return;
       }
 
-      // Validate URL format
+      
       try {
         new URL(fileUrl);
       } catch {

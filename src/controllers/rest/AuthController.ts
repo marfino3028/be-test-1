@@ -18,7 +18,7 @@ export default class AuthController {
     try {
       const { firstName, lastName, email, password, phoneNumber, country, bio } = req.body;
 
-      // Validation
+      
       if (!firstName || !lastName || !email || !password) {
         res.status(400).json(
           errorResponse('First name, last name, email, and password are required')
@@ -26,14 +26,14 @@ export default class AuthController {
         return;
       }
 
-      // Email validation
+     
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
         res.status(400).json(errorResponse('Invalid email format'));
         return;
       }
 
-      // Password validation (minimum 6 characters)
+      
       if (password.length < 6) {
         res.status(400).json(
           errorResponse('Password must be at least 6 characters long')
@@ -71,7 +71,7 @@ export default class AuthController {
     try {
       const { email, password } = req.body;
 
-      // Validation
+      
       if (!email || !password) {
         res.status(400).json(errorResponse('Email and password are required'));
         return;

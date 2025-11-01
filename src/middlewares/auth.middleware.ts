@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { verifyToken, JWTPayload } from '../utils/auth.utils';
 import { errorResponse } from '../utils/response.utils';
 
-// Extend Express Request type to include user
+
 declare global {
   namespace Express {
     interface Request {
@@ -21,7 +21,7 @@ export const authMiddleware = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    // Get token from Authorization header
+    
     const authHeader = req.headers.authorization;
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -31,13 +31,13 @@ export const authMiddleware = async (
       return;
     }
 
-    // Extract token
-    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    
+    const token = authHeader.substring(7); 
 
-    // Verify token
+    
     const decoded = verifyToken(token);
 
-    // Attach user info to request
+    
     req.user = decoded;
 
     next();
@@ -68,7 +68,7 @@ export const optionalAuthMiddleware = async (
 
     next();
   } catch (error) {
-    // Continue without user info if token is invalid
+    
     next();
   }
 };

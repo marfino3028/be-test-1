@@ -51,10 +51,10 @@ export default class TodoService extends Service {
    * Get todos with filtering and pagination
    */
   async getTodos(userId: string, queryParams: any) {
-    // Build base where clause
+    
     const baseWhere = { userId };
 
-    // Use FilterQueryV2 to handle filtering, searching, and pagination
+    
     const filterQuery = new FilterQueryV2(
       queryParams,
       this.prisma.todo,
@@ -95,7 +95,7 @@ export default class TodoService extends Service {
     userId: string,
     data: UpdateTodoDTO
   ): Promise<Todo> {
-    // Check if todo exists and belongs to user
+    
     const todo = await this.prisma.todo.findFirst({
       where: { id, userId },
     });
@@ -124,7 +124,7 @@ export default class TodoService extends Service {
    * Delete todo
    */
   async delete(id: string, userId: string): Promise<void> {
-    // Check if todo exists and belongs to user
+    
     const todo = await this.prisma.todo.findFirst({
       where: { id, userId },
     });

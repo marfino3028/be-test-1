@@ -38,7 +38,7 @@ export default class AuthService extends Service {
    * Register a new user
    */
   async register(data: RegisterDTO): Promise<AuthResponse> {
-    // Check if user already exists
+    
     const existingUser = await this.prisma.user.findUnique({
       where: { email: data.email },
     });
@@ -47,10 +47,10 @@ export default class AuthService extends Service {
       throw new Error('User with this email already exists');
     }
 
-    // Hash password
+    
     const hashedPassword = await hashPassword(data.password);
 
-    // Create user
+    
     const user = await this.prisma.user.create({
       data: {
         ...data,
@@ -58,13 +58,13 @@ export default class AuthService extends Service {
       },
     });
 
-    // Generate token
+    
     const token = generateToken({
       userId: user.id,
       email: user.email,
     });
 
-    // Remove password from response
+    
     const { password, ...userWithoutPassword } = user;
 
     return {
@@ -77,7 +77,7 @@ export default class AuthService extends Service {
    * Login user
    */
   async login(data: LoginDTO): Promise<AuthResponse> {
-    // Find user
+    
     const user = await this.prisma.user.findUnique({
       where: { email: data.email },
     });
@@ -86,20 +86,20 @@ export default class AuthService extends Service {
       throw new Error('Invalid email or password');
     }
 
-    // Verify password
+    
     const isPasswordValid = await comparePassword(data.password, user.password);
 
     if (!isPasswordValid) {
       throw new Error('Invalid email or password');
     }
 
-    // Generate token
+    
     const token = generateToken({
       userId: user.id,
       email: user.email,
     });
 
-    // Remove password from response
+    
     const { password, ...userWithoutPassword } = user;
 
     return {
